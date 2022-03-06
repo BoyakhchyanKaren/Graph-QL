@@ -2,22 +2,26 @@ import 'reflect-metadata';
 import dotenv from 'dotenv';
 import {createConnection} from 'typeorm';
 import config from "../ormconfig";
-
 import {getApplication} from './app';
-
 dotenv.config();
-const app = getApplication();
+const PORT = process.env.PORT || '4564';
 
-(async () => {
+export type Server = {
+    (port:string):Promise<void>,
+};
+
+const server:Server = async (port:string):Promise<void> => {
+
     try {
         await createConnection(config);
+        const app = getApplication();
+        app.listen((port), () => {
+           console.log(`Server is running on port: ${port}`);
+        });
     } catch (e) {
-        console.error('💥 ERROR: Database connection failed!!', e);
-        process.exit(1);
+        console.log("Error: Database connection failed!", e);
     }
-    console.log('DB connected...');
-    const {PORT} = process.env || 3025;
-    app.listen(PORT, () => {
-        console.log(`Starting listen server on port ${PORT}...`);
-    });
-})();
+
+};
+
+server(PORT).catch((e) => console.log(e));
